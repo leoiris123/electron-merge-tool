@@ -1,7 +1,7 @@
 
 export const sorttool = {
     sortData(data,headerNameList,headertypeList){
-        //处理成烈的额形式
+        //处理成列的形式
         console.log(data,"list数据处理前")
         let out = {}
         data.map((item,index)=>{
@@ -13,11 +13,20 @@ export const sorttool = {
         })
         Object.keys(out).map((property)=>{
             data.map((item,index)=>{
+                let type = headertypeList[headerNameList.indexOf(property)]
                 if(Object.prototype.hasOwnProperty.call(item, property)){
-                    out[property].push(item[property]) 
+                   
+                    if(type == "string"){
+                        out[property].push(item[property].toString()) 
+                    }else if(type == "number"){
+                        out[property].push(Number(item[property])) 
+                    }else{
+                        out[property].push(item[property]) 
+                    }
+                   
                 }else{
                    if(headerNameList.indexOf(property)>=0){
-                       let type = headertypeList[headerNameList.indexOf(property)]
+                   
                        if(type == "string"){
                         out[property].push("")
                        }else if(type == "number"){
