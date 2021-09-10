@@ -38,12 +38,45 @@ export default {
        let exportdirPath = localStorage.getItem("exportdirPath");
         if(dirPath){
           this.dirPath = dirPath
+             this.loadDir()
+          console.log(dirPath,"dirPath")
         }
          if(exportdirPath){
           this.exportdirPath = exportdirPath
         }
   },
-  methods: {
+  methods: {  checkExportPathDir(path){
+      console.log(path,"outpath")
+      let jsonpath = path + "/json"
+      let tspath = path + "/ts"
+       if(fs.existsSync(jsonpath) && fs.existsSync(tspath)){
+        console.log( "确认存在 返回 true")
+        return true
+      }
+      if(!fs.existsSync(jsonpath)){
+        fs.mkdirSync(jsonpath)
+               this.$notify({
+        title: "导出路径缺失 /json",
+        message: "已自动生成",
+        type: "success",
+        duration: 500,
+      });
+      }
+      if(!fs.existsSync(tspath)){
+        fs.mkdirSync(tspath)
+               this.$notify({
+        title: "导出路径缺失 /ts",
+        message: "已自动生成",
+        type: "success",
+        duration: 500,
+      });
+      }
+      if(fs.existsSync(jsonpath) && fs.existsSync(tspath)){
+        console.log( "确认存在 返回 true")
+        return true
+      }
+      return false
+    },
     loadFile(dirPath, exportdirPath, name) {
       loader.loadXLSX(dirPath, exportdirPath, name); //复用
     },
@@ -67,6 +100,17 @@ export default {
         });
         return;
       }
+           let checkpass =  this.checkExportPathDir(this.exportdirPath)
+     console.log(checkpass,"checkpass")
+     if(!checkpass){
+       this.$notify({
+        title: "导出路径出错",
+        message: "抓程序 改！",
+        type: "warning",
+        duration: 500,
+      });
+       return
+     }
       this.fileList.map((item, index) => {
         this.loadFile(this.dirPath, this.exportdirPath, item);
 

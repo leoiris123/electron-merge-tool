@@ -83,7 +83,7 @@ export const loader = {
       let jsonName = Name + ".json"
       // const CPath = path.join(dirPath, exportdirPath);
 
-      let str = "export default class " + Name + ClassObj;
+      let str = "export default class " + Name + "JsonInfo"+ ClassObj;
       console.log(str, "写ts的str");
       console.log(Name,"Name")
       fs.writeFileSync(exportdirPath+"/ts/"+tsNameafter, str);
