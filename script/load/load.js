@@ -20,14 +20,15 @@ const XLSXList = {
 };
 
 function saveJSON(exportdirPathAll, fileName, str) {
-  const exportDataPath = path.join(exportdirPathAll,"/"+fileName);
+  const exportDataPath = path.join(exportdirPathAll, "/" + fileName);
   fs.writeFileSync(exportDataPath, str);
 
 }
 export const loader = {
   // 加载XML文件
-  loadXLSX(dirPath,exportdirPath,XLSXname) {
-    fs.readFile(dirPath + "/"+XLSXname, (err, data) => {
+  loadXLSX(dirPath, exportPath, XLSXname) {
+    console.log(dirPath, exportPath, XLSXname, "dirPath, exportPath, XLSXname")
+    fs.readFile(dirPath + "/" + XLSXname, (err, data) => {
       if (err) {
         console.warn("err", err);
       }
@@ -45,7 +46,7 @@ export const loader = {
         headerlist = XLSX.utils.sheet_to_json(wb.Sheets[sheetName], {
           header: "A",
         });
-    
+
         if (headerlist[2]) {
           headerNameList = Object.values(headerlist[2]);
           headertypeList = Object.values(headerlist[5]).map((item) => {
@@ -66,37 +67,34 @@ export const loader = {
           total: list.length || 0,
         });
       });
-  
+
       let lastindex = XLSXname.indexOf(".xls")
-      if(lastindex<0){
+      if (lastindex < 0) {
         event.$notify({
-          title: XLSXname +"名称不符合规范",
+          title: XLSXname + "名称不符合规范",
           message: "失败",
           type: "warning",
           duration: 700,
         });
         return
       }
-      let Name  = XLSXname.slice(0,lastindex) 
-      let tsNameafter = Name + "JsonInfo"+".ts"
+      let Name = XLSXname.slice(0, lastindex)
+      let tsNameafter = Name + "JsonInfo" + ".ts"
 
       let jsonName = Name + ".json"
       // const CPath = path.join(dirPath, exportdirPath);
 
-      let str = "export default class " + Name + "JsonInfo"+ ClassObj;
-      console.log(str, "写ts的str");
-      console.log(Name,"Name")
-      fs.writeFileSync(exportdirPath+"/ts/"+tsNameafter, str);
+      let str = "export default class " + Name + "JsonInfo" + ClassObj;
+      fs.writeFileSync(exportPath.exportTsPath + "/" + tsNameafter, str);
 
       //对导入的excel数据进行整理
       let list = result[0].list;
       list.splice(0, 6);
-      console.log(list, "list");
       //将数据处理成列对应的形式
-      let out = sorttool.sortData(list,headerNameList,headertypeList);
+      let out = sorttool.sortData(list, headerNameList, headertypeList);
       let Str = JSON.stringify(out);
-      saveJSON(exportdirPath+"/json/", jsonName, Str);
+      saveJSON(exportPath.exportJsonPath, jsonName, Str);
     });
   },
- 
+
 };

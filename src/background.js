@@ -13,13 +13,13 @@ protocol.registerSchemesAsPrivileged([
 async function createWindow() {
   // Create the browser window.
   const win = new BrowserWindow({
-    height:200,
+    height: 240,
     width: 800,
-   
-    maxHeight:200,
-    maxWidth:1000,
-    minHeight:200,
-    minWidth:400,
+
+    maxHeight: 280,
+    maxWidth: 1000,
+    minHeight: 200,
+    minWidth: 400,
     webPreferences: {
       enableRemoteModule: true,
       nodeIntegration: true,

@@ -1,15 +1,28 @@
 <template>
   <div class="home">
-
     <el-row type="flex" class="row">
       <el-button @click="handleImport" type="primary">导入路径</el-button>
       <el-input :value="dirPath" placeholder="请选择"></el-input>
     </el-row>
     <el-row type="flex" class="row">
-      <el-button @click="handleExport" type="primary">导出路径</el-button>
-      <el-input :value="exportdirPath" placeholder="请选择"></el-input>
+      <el-button @click="handleExport(exportPath, true)" type="primary"
+        >导出Json路径</el-button
+      >
+      <el-input
+        :value="exportPath.exportJsonPath"
+        placeholder="请选择"
+      ></el-input>
     </el-row>
-    <el-row type="flex" >
+    <el-row type="flex" class="row">
+      <el-button @click="handleExport(exportPath, false)" type="primary"
+        >导出TsClass路径</el-button
+      >
+      <el-input
+        :value="exportPath.exportTsPath"
+        placeholder="请选择"
+      ></el-input>
+    </el-row>
+    <el-row type="flex">
       <el-button @click="handleClear" type="warning">清空选项</el-button>
       <el-button @click="handleConfirm" type="danger">开始转换</el-button>
     </el-row>
@@ -28,62 +41,52 @@ export default {
   data() {
     return {
       rootPath: "kong",
-      dirPath: "",
-      exportdirPath: "",
-      fileList: [],
+      dirPath: "", //总引入路径
+      exportPath: {
+        exportJsonPath: "",
+        exportTsPath: "",
+      }, //总导出路径
+      fileList: [], //最外层文件列表
+      singleDirList: [], //第二层文件夹
     };
   },
-  mounted(){
-       let dirPath = localStorage.getItem("dirPath");
-       let exportdirPath = localStorage.getItem("exportdirPath");
-        if(dirPath){
-          this.dirPath = dirPath
-             this.loadDir()
-          console.log(dirPath,"dirPath")
-        }
-         if(exportdirPath){
-          this.exportdirPath = exportdirPath
-        }
+  mounted() {
+    let dirPath = localStorage.getItem("dirPath");
+    let exportJsonPath = localStorage.getItem("exportJsonPath");
+    let exportTsPath = localStorage.getItem("exportTsPath");
+    if (dirPath) {
+      this.dirPath = dirPath;
+      this.loadDir(dirPath, this.fileList, this.singleDirList);
+      console.log(dirPath, "dirPath");
+    }
+    if (exportJsonPath) {
+      this.exportPath.exportJsonPath = exportJsonPath;
+    }
+    if (exportTsPath) {
+      this.exportPath.exportTsPath = exportTsPath;
+    }
+    console.log(this.exportPath, "this.exportPath");
   },
-  methods: {  checkExportPathDir(path){
-      console.log(path,"outpath")
-      let jsonpath = path + "/json"
-      let tspath = path + "/ts"
-       if(fs.existsSync(jsonpath) && fs.existsSync(tspath)){
-        console.log( "确认存在 返回 true")
-        return true
+  methods: {
+    checkExitDir(checkPath) {
+      if (fs.existsSync(checkPath)) {
+        return true;
+      } else {
+        fs.mkdirSync(checkPath);
+        console.log("自动生成文件夹:" + checkPath);
       }
-      if(!fs.existsSync(jsonpath)){
-        fs.mkdirSync(jsonpath)
-               this.$notify({
-        title: "导出路径缺失 /json",
-        message: "已自动生成",
-        type: "success",
-        duration: 500,
-      });
-      }
-      if(!fs.existsSync(tspath)){
-        fs.mkdirSync(tspath)
-               this.$notify({
-        title: "导出路径缺失 /ts",
-        message: "已自动生成",
-        type: "success",
-        duration: 500,
-      });
-      }
-      if(fs.existsSync(jsonpath) && fs.existsSync(tspath)){
-        console.log( "确认存在 返回 true")
-        return true
-      }
-      return false
     },
+
     loadFile(dirPath, exportdirPath, name) {
       loader.loadXLSX(dirPath, exportdirPath, name); //复用
     },
-    handleClear(){
-      this.dirPath = ""
-      this.exportdirPath = ""
-      this.fileList = []
+    handleClear() {
+      this.dirPath = "";
+      this.exportPath = {
+        exportJsonPath: "",
+        exportTsPath: "",
+      };
+      this.fileList = [];
     },
     handleConfirm() {
       console.log("确认");
@@ -92,78 +95,100 @@ export default {
         this.fileList == [] ||
         this.exportdirPath == ""
       ) {
-        this.$notify({
-          title: "不完整",
-          message: "请选择路径",
-          type: "warning",
-          duration: 500,
-        });
+        this.$message("请选择路径");
         return;
       }
-           let checkpass =  this.checkExportPathDir(this.exportdirPath)
-     console.log(checkpass,"checkpass")
-     if(!checkpass){
-       this.$notify({
-        title: "导出路径出错",
-        message: "抓程序 改！",
-        type: "warning",
-        duration: 500,
-      });
-       return
-     }
+      console.log(
+        this.fileList,
+        this.singleDirList,
+        this.dirPath,
+        this.exportPath,
+        " this.fileList,this.singleDirList,this.dirPath,this.exportPath,"
+      );
       this.fileList.map((item, index) => {
-        this.loadFile(this.dirPath, this.exportdirPath, item);
-
-        console.log(
-          this.dirPath,
-          this.exportdirPath,
-          item,
-          "this.dirPath,this.exportdirPath,item"
+        console.log("111");
+        this.loadFile(this.dirPath, this.exportPath, item);
+      });
+      // 读取第二层文件夹
+      console.log(this.singleDirList, "this.singleDirList");
+      this.singleDirList.forEach((item) => {
+        let singlefilelist = [];
+        let singledirlist = [];
+        let singleInPath = this.dirPath + "/" + item;
+        let singleOutJsonPath = this.exportPath.exportJsonPath + "/" + item;
+        let singleOutTsPath = this.exportPath.exportTsPath + "/" + item;
+        let outPath = {
+          exportJsonPath: singleOutJsonPath,
+          exportTsPath: singleOutTsPath,
+        };
+        this.checkExitDir(singleOutJsonPath);
+        this.checkExitDir(singleOutTsPath);
+        this.loadDir(singleInPath, singlefilelist, singledirlist).then(
+          (res) => {
+            setTimeout(() => {
+              console.log(
+                singlefilelist,
+                singleInPath,
+                outPath,
+                "singlefilelist,singleInPath, outPath"
+              );
+              singlefilelist.forEach((item1) => {
+                this.loadFile(singleInPath, outPath, item1);
+              });
+            }, 1);
+          }
         );
       });
-      this.$notify({
-        title: "操作成功",
-        message: "操作成功",
-        type: "success",
-        duration: 500,
-      });
+
+      this.$message("success");
     },
     //获取文件名列表
-    loadDir() {
-      //获取文件夹下的文件列表
-      console.log(this.dirPath, "this.dirPath");
-      fs.readdir(this.dirPath, (err, files) => {
-        if (err) {
-          console.log(err);
-        } else {
-          // console.log(files); 返回的文件是个数组,可以用forEach循环输出文件名
-          files.forEach((x) => {
-            console.log("有" + x + "这个文件");
-          });
-          this.fileList = files;
-          this.$notify({
-            title: "导入路径成功",
-            message: "导入路径成功",
-            type: "success",
-            duration: 500,
-          });
-        }
+    // return new Promise((resolve, reject) => {
+    //   for (let key in this.selectGroupData) {
+    //     this.dialogEditList[key][character] = deepClone(config);
+    //   }
+    //   resolve("success");
+    // });
+    loadDir(dirPath, filelist, dirlist) {
+      return new Promise((resolve, reject) => {
+        //获取文件夹下的文件列表
+        console.log(dirPath, "this.dirPath");
+        fs.readdir(dirPath, (err, files) => {
+          if (err) {
+            console.log(err);
+          } else {
+            files.filter((x) => {
+              let state = fs.lstatSync(dirPath + "/" + x);
+              if (state.isDirectory()) {
+                dirlist.push(x);
+              } else {
+                filelist.push(x);
+              }
+              return !state.isDirectory();
+            });
+            this.$notify({
+              title: "导入路径成功",
+              message: "导入路径成功",
+              type: "success",
+              duration: 500,
+            });
+          }
+        });
+        resolve("success");
       });
     },
     //导入路径
     handleImport() {
       console.log("引入");
-
       dialog
         .showOpenDialog({
           properties: ["openFile", "openDirectory"],
         })
         .then((result) => {
-          console.log(result.canceled, "1");
           if (!result.canceled) {
             this.dirPath = result.filePaths[0];
-            localStorage.setItem("dirPath",this.dirPath);
-            this.loadDir(this.dirPath);
+            localStorage.setItem("dirPath", this.dirPath);
+            this.loadDir(this.dirPath, this.fileList, this.singleDirList);
           } else {
             this.$notify({
               title: "已取消",
@@ -185,17 +210,21 @@ export default {
     },
 
     //导出路径
-    handleExport() {
+    handleExport(exportPath, isjson) {
       console.log("导出");
       dialog
         .showOpenDialog({
           properties: ["openFile", "openDirectory"],
         })
         .then((result) => {
-          console.log(result.canceled, "1");
           if (!result.canceled) {
-            this.exportdirPath = result.filePaths[0];
-             localStorage.setItem("exportdirPath",this.exportdirPath);
+            if (isjson) {
+              exportPath.exportJsonPath = result.filePaths[0];
+              localStorage.setItem("exportJsonPath", result.filePaths[0]);
+            } else {
+              exportPath.exportTsPath = result.filePaths[0];
+              localStorage.setItem("exportTsPath", result.filePaths[0]);
+            }
             this.$notify({
               title: "选择导出路径成功",
               message: "选择导出路径成功",
@@ -210,7 +239,7 @@ export default {
               duration: 500,
             });
           }
-          console.log(result.filePaths, "2");
+          console.log(result.filePaths[0], "选择的路径");
         })
         .catch((err) => {
           console.log(err, "3");
@@ -226,7 +255,7 @@ export default {
 </script>
 
 <style scoped>
-.row{
+.row {
   margin-bottom: 15px;
 }
 </style>
