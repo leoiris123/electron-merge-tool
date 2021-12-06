@@ -16,7 +16,7 @@ async function createWindow() {
     height: 240,
     width: 800,
 
-    maxHeight: 280,
+    maxHeight: 1000,
     maxWidth: 1000,
     minHeight: 200,
     minWidth: 400,

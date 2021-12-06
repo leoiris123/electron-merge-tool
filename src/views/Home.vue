@@ -87,6 +87,9 @@ export default {
         exportTsPath: "",
       };
       this.fileList = [];
+      localStorage.removeItem("dirPath");
+      localStorage.removeItem("exportJsonPath");
+      localStorage.removeItem("exportTsPath");
     },
     handleConfirm() {
       console.log("确认");
@@ -135,7 +138,7 @@ export default {
               singlefilelist.forEach((item1) => {
                 this.loadFile(singleInPath, outPath, item1);
               });
-            }, 1);
+            }, 100);
           }
         );
       });
