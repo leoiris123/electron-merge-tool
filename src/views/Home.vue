@@ -156,6 +156,7 @@ export default {
       return new Promise((resolve, reject) => {
         //获取文件夹下的文件列表
         console.log(dirPath, "this.dirPath");
+        let reg = /^\./;
         fs.readdir(dirPath, (err, files) => {
           if (err) {
             console.log(err);
@@ -165,7 +166,9 @@ export default {
               if (state.isDirectory()) {
                 dirlist.push(x);
               } else {
-                filelist.push(x);
+                if (!reg.test(x)) {
+                  filelist.push(x);
+                }
               }
               return !state.isDirectory();
             });
