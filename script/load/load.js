@@ -18,7 +18,7 @@ export const loader = {
 
     return new Promise((resolve, reject) => {
       try {
-        console.log(dirPath, exportPath, XLSXname, "dirPath, exportPath, XLSXname")
+        // console.log(dirPath, exportPath, XLSXname, "dirPath, exportPath, XLSXname")
         fs.readFile(dirPath + "/" + XLSXname, (err, data) => {
           if (err) {
             console.warn("err", err);
@@ -43,13 +43,22 @@ export const loader = {
                 reject(XLSXname)
                 console.log("出错文件：", dirPath, exportPath, XLSXname)
               }
+
               headerNameList = Object.values(headerlist[2]);
               headertypeList = Object.values(headerlist[5]).map((item) => {
                 if (item == "int") {
                   return "number";
                 }
+                if (item == null || item == "") {
+                  reject(XLSXname)
+                }
                 return item;
               });
+
+              if (headerNameList.length !== headertypeList.length) {
+                reject(XLSXname)
+                return
+              }
               ClassObj = sorttool.createClassifier(headerNameList, headertypeList);
             }
             list = XLSX.utils.sheet_to_json(wb.Sheets[sheetName], {
@@ -83,6 +92,10 @@ export const loader = {
           fs.writeFileSync(exportPath.exportTsPath + "/" + tsNameafter, str);
 
           //对导入的excel数据进行整理
+          if (!result[0]) {
+            reject(XLSXname)
+            return
+          }
           let list = result[0].list;
           list.splice(0, 6);
           //将数据处理成列对应的形式

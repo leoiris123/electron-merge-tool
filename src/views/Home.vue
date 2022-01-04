@@ -22,7 +22,7 @@
         placeholder="请选择"
       ></el-input>
     </el-row>
-    <el-row type="flex">
+    <el-row v-if="errNameList.length > 0" type="flex" class="row">
       <div v-for="(item, index) in errNameList" :key="index">
         <!-- <el-button @click="handleClear" type="warning">清空选项</el-button> -->
         <el-input :value="item"></el-input>
@@ -41,11 +41,13 @@ import { loader } from "../../script/load/load.js";
 import { exportutil } from "../../script/load/exportfile.js";
 const { dialog } = window.require("electron").remote;
 const fs = window.require("fs");
+import { Loading } from "element-ui";
 export default {
   name: "Home",
   components: {},
   data() {
     return {
+      loadingInstance: null,
       rootPath: "kong",
       dirPath: "", //总引入路径
       exportPath: {
@@ -105,6 +107,7 @@ export default {
     },
     handleConfirm() {
       console.log("确认");
+      this.loadingInstance = Loading.service({ fullscreen: true });
       if (
         this.dirPath == "" ||
         this.fileList == [] ||
@@ -154,8 +157,24 @@ export default {
           }
         );
       });
-    },
 
+      this.checkerrNameList();
+    },
+    checkerrNameList() {
+      // 延迟判断 后期优化 qaq
+      setTimeout(() => {
+        this.$nextTick(() => {
+          // 以服务的方式调用的 Loading 需要异步关闭
+          this.loadingInstance.close();
+          this.$notify({
+            title: this.errNameList.length > 0 ? "请查看错误列表" : "转换成功",
+            message: "转换结束",
+            type: this.errNameList.length > 0 ? "warning" : "success",
+            duration: 700,
+          });
+        });
+      }, 2000);
+    },
     loadDir(dirPath, filelist, dirlist) {
       return new Promise((resolve, reject) => {
         //获取文件夹下的文件列表
