@@ -20,10 +20,10 @@ const routes = [
     component: () =>
       import(/* webpackChunkName: "about" */ "../views/About.vue"),
   },
-  {
-    path: "*",
-    redirect:'/'
-  },
+  // {
+  //   path: "*",
+  //   redirect:'/'
+  // },
 ];
 
 const router = new VueRouter({

@@ -18,7 +18,7 @@ async function createWindow() {
 
     maxHeight: 1000,
     maxWidth: 1000,
-    minHeight: 200,
+    minHeight: 260,
     minWidth: 400,
     webPreferences: {
       enableRemoteModule: true,

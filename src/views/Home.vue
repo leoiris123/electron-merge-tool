@@ -23,6 +23,12 @@
       ></el-input>
     </el-row>
     <el-row type="flex">
+      <div v-for="(item, index) in errNameList" :key="index">
+        <!-- <el-button @click="handleClear" type="warning">清空选项</el-button> -->
+        <el-input :value="item"></el-input>
+      </div>
+    </el-row>
+    <el-row type="flex">
       <el-button @click="handleClear" type="warning">清空选项</el-button>
       <el-button @click="handleConfirm" type="danger">开始转换</el-button>
     </el-row>
@@ -48,6 +54,9 @@ export default {
       }, //总导出路径
       fileList: [], //最外层文件列表
       singleDirList: [], //第二层文件夹
+
+      //
+      errNameList: [], // 所有错误的文件
     };
   },
   mounted() {
@@ -78,7 +87,10 @@ export default {
     },
 
     loadFile(dirPath, exportdirPath, name) {
-      loader.loadXLSX(dirPath, exportdirPath, name); //复用
+      loader.loadXLSX(dirPath, exportdirPath, name).catch((res) => {
+        console.log("返回：", res);
+        this.errNameList.push(res);
+      }); //复用
     },
     handleClear() {
       this.dirPath = "";
@@ -101,15 +113,15 @@ export default {
         this.$message("请选择路径");
         return;
       }
-      console.log(
-        this.fileList,
-        this.singleDirList,
-        this.dirPath,
-        this.exportPath,
-        " this.fileList,this.singleDirList,this.dirPath,this.exportPath,"
-      );
+      this.errNameList = []; //重置错误列表
+      // console.log(
+      //   this.fileList,
+      //   this.singleDirList,
+      //   this.dirPath,
+      //   this.exportPath,
+      //   " this.fileList,this.singleDirList,this.dirPath,this.exportPath,"
+      // );
       this.fileList.map((item, index) => {
-        console.log("111");
         this.loadFile(this.dirPath, this.exportPath, item);
       });
       // 读取第二层文件夹
@@ -129,12 +141,12 @@ export default {
         this.loadDir(singleInPath, singlefilelist, singledirlist).then(
           (res) => {
             setTimeout(() => {
-              console.log(
-                singlefilelist,
-                singleInPath,
-                outPath,
-                "singlefilelist,singleInPath, outPath"
-              );
+              // console.log(
+              //   singlefilelist,
+              //   singleInPath,
+              //   outPath,
+              //   "singlefilelist,singleInPath, outPath"
+              // );
               singlefilelist.forEach((item1) => {
                 this.loadFile(singleInPath, outPath, item1);
               });
@@ -142,16 +154,8 @@ export default {
           }
         );
       });
-
-      this.$message("success");
     },
-    //获取文件名列表
-    // return new Promise((resolve, reject) => {
-    //   for (let key in this.selectGroupData) {
-    //     this.dialogEditList[key][character] = deepClone(config);
-    //   }
-    //   resolve("success");
-    // });
+
     loadDir(dirPath, filelist, dirlist) {
       return new Promise((resolve, reject) => {
         //获取文件夹下的文件列表
@@ -172,16 +176,10 @@ export default {
               }
               return !state.isDirectory();
             });
-            this.$notify({
-              title: "导入路径成功",
-              message: "导入路径成功",
-              type: "success",
-              duration: 500,
-            });
           }
         });
         resolve("success");
-      });
+      }).catch(() => {});
     },
     //导入路径
     handleImport() {
@@ -231,12 +229,6 @@ export default {
               exportPath.exportTsPath = result.filePaths[0];
               localStorage.setItem("exportTsPath", result.filePaths[0]);
             }
-            this.$notify({
-              title: "选择导出路径成功",
-              message: "选择导出路径成功",
-              type: "success",
-              duration: 500,
-            });
           } else {
             this.$notify({
               title: "已取消",
