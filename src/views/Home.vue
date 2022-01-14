@@ -107,6 +107,7 @@ export default {
     },
     handleConfirm() {
       console.log("确认");
+      this.loadingInstance = null;
       this.loadingInstance = Loading.service({ fullscreen: true });
       if (
         this.dirPath == "" ||

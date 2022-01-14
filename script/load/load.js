@@ -41,7 +41,7 @@ export const loader = {
             if (headerlist[2]) {
               if (!headerlist[5]) {
                 reject(XLSXname)
-                console.log("出错文件：", dirPath, exportPath, XLSXname)
+                console.log("出错文件：第六行缺失", headerlist[2], headerlist[5], dirPath, exportPath, XLSXname, "headerlist[2], headerlist[5], dirPath, exportPath, XLSXname")
               }
 
               headerNameList = Object.values(headerlist[2]);
@@ -50,16 +50,21 @@ export const loader = {
                   return "number";
                 }
                 if (item == null || item == "") {
+                  console.log("出错文件：标题有空值", headerlist[2], headerlist[5], dirPath, exportPath, XLSXname, "headerlist[2], headerlist[5], dirPath, exportPath, XLSXname")
                   reject(XLSXname)
+
                 }
                 return item;
               });
 
               if (headerNameList.length !== headertypeList.length) {
+                console.log("出错文件：列表标题长度不一致", headerlist[2], headerlist[5], dirPath, exportPath, XLSXname, "headerlist[2], headerlist[5], dirPath, exportPath, XLSXname")
                 reject(XLSXname)
                 return
               }
               ClassObj = sorttool.createClassifier(headerNameList, headertypeList);
+            } else {
+              console.log(headerlist, "headerlist");
             }
             list = XLSX.utils.sheet_to_json(wb.Sheets[sheetName], {
               header: headerNameList,
@@ -93,6 +98,7 @@ export const loader = {
 
           //对导入的excel数据进行整理
           if (!result[0]) {
+            console.log("出错文件：标题错误", dirPath, exportPath, XLSXname, "dirPath, exportPath, XLSXname")
             reject(XLSXname)
             return
           }
@@ -105,6 +111,7 @@ export const loader = {
           resolve(XLSXname)
         });
       } catch {
+        console.log("出错文件：运行过程错误", dirPath, exportPath, XLSXname, " dirPath, exportPath, XLSXname")
         reject(XLSXname)
       }
     }
