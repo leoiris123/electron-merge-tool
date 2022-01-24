@@ -1,5 +1,5 @@
 {
-  "name": "tool",
+  "name": "pvp_tool",
   "version": "0.1.1",
   "private": true,
   "scripts": {
@@ -41,6 +41,9 @@
     "sass": "^1.26.5",
     "sass-loader": "^8.0.2",
     "vue-cli-plugin-electron-builder": "~2.1.1",
-    "vue-template-compiler": "^2.6.11"
+    "vue-template-compiler": "^2.6.11",
+    "@types/node": "^17.0.8",
+    "ts-node": "^10.4.0",
+    "ts-node-dev": "^1.1.8"
   }
 }

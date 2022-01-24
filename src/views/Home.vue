@@ -5,22 +5,10 @@
       <el-input :value="dirPath" placeholder="请选择"></el-input>
     </el-row>
     <el-row type="flex" class="row">
-      <el-button @click="handleExport(exportPath, true)" type="primary"
-        >导出Json路径</el-button
+      <el-button @click="handleExport(exportPath)" type="primary"
+        >导出导出路径</el-button
       >
-      <el-input
-        :value="exportPath.exportJsonPath"
-        placeholder="请选择"
-      ></el-input>
-    </el-row>
-    <el-row type="flex" class="row">
-      <el-button @click="handleExport(exportPath, false)" type="primary"
-        >导出TsClass路径</el-button
-      >
-      <el-input
-        :value="exportPath.exportTsPath"
-        placeholder="请选择"
-      ></el-input>
+      <el-input :value="exportPath" placeholder="请选择"></el-input>
     </el-row>
     <el-row v-if="errNameList.length > 0" type="flex" class="row">
       <div v-for="(item, index) in errNameList" :key="index">
@@ -37,7 +25,8 @@
 
 <script>
 // @ is an alias to /src
-import { loader } from "../../script/load/load.js";
+
+import { loadXlsxBase } from "../../script/exportExcels.js";
 import { exportutil } from "../../script/load/exportfile.js";
 const { dialog } = window.require("electron").remote;
 const fs = window.require("fs");
@@ -50,157 +39,43 @@ export default {
       loadingInstance: null,
       rootPath: "kong",
       dirPath: "", //总引入路径
-      exportPath: {
-        exportJsonPath: "",
-        exportTsPath: "",
-      }, //总导出路径
+      exportPath: "", //总导出路径
       fileList: [], //最外层文件列表
       singleDirList: [], //第二层文件夹
 
-      //
       errNameList: [], // 所有错误的文件
     };
   },
   mounted() {
     let dirPath = localStorage.getItem("dirPath");
-    let exportJsonPath = localStorage.getItem("exportJsonPath");
-    let exportTsPath = localStorage.getItem("exportTsPath");
+    let exportPath = localStorage.getItem("exportPath");
     if (dirPath) {
       this.dirPath = dirPath;
-      this.loadDir(dirPath, this.fileList, this.singleDirList);
       console.log(dirPath, "dirPath");
     }
-    if (exportJsonPath) {
-      this.exportPath.exportJsonPath = exportJsonPath;
-    }
-    if (exportTsPath) {
-      this.exportPath.exportTsPath = exportTsPath;
+    if (exportPath) {
+      this.exportPath = exportPath;
     }
     console.log(this.exportPath, "this.exportPath");
   },
   methods: {
-    checkExitDir(checkPath) {
-      if (fs.existsSync(checkPath)) {
-        return true;
-      } else {
-        fs.mkdirSync(checkPath);
-        console.log("自动生成文件夹:" + checkPath);
-      }
-    },
-
-    loadFile(dirPath, exportdirPath, name) {
-      loader.loadXLSX(dirPath, exportdirPath, name).catch((res) => {
-        console.log("返回：", res);
-        this.errNameList.push(res);
-      }); //复用
-    },
     handleClear() {
       this.dirPath = "";
-      this.exportPath = {
-        exportJsonPath: "",
-        exportTsPath: "",
-      };
-      this.fileList = [];
+      this.exportPath = "";
       localStorage.removeItem("dirPath");
-      localStorage.removeItem("exportJsonPath");
-      localStorage.removeItem("exportTsPath");
+      localStorage.removeItem("exportPath");
     },
     handleConfirm() {
       console.log("确认");
-      this.loadingInstance = null;
-      this.loadingInstance = Loading.service({ fullscreen: true });
-      if (
-        this.dirPath == "" ||
-        this.fileList == [] ||
-        this.exportdirPath == ""
-      ) {
+
+      if (this.dirPath == "" || this.exportPath == "") {
         this.$message("请选择路径");
         return;
       }
-      this.errNameList = []; //重置错误列表
-      // console.log(
-      //   this.fileList,
-      //   this.singleDirList,
-      //   this.dirPath,
-      //   this.exportPath,
-      //   " this.fileList,this.singleDirList,this.dirPath,this.exportPath,"
-      // );
-      this.fileList.map((item, index) => {
-        this.loadFile(this.dirPath, this.exportPath, item);
-      });
-      // 读取第二层文件夹
-      console.log(this.singleDirList, "this.singleDirList");
-      this.singleDirList.forEach((item) => {
-        let singlefilelist = [];
-        let singledirlist = [];
-        let singleInPath = this.dirPath + "/" + item;
-        let singleOutJsonPath = this.exportPath.exportJsonPath + "/" + item;
-        let singleOutTsPath = this.exportPath.exportTsPath + "/" + item;
-        let outPath = {
-          exportJsonPath: singleOutJsonPath,
-          exportTsPath: singleOutTsPath,
-        };
-        this.checkExitDir(singleOutJsonPath);
-        this.checkExitDir(singleOutTsPath);
-        this.loadDir(singleInPath, singlefilelist, singledirlist).then(
-          (res) => {
-            setTimeout(() => {
-              // console.log(
-              //   singlefilelist,
-              //   singleInPath,
-              //   outPath,
-              //   "singlefilelist,singleInPath, outPath"
-              // );
-              singlefilelist.forEach((item1) => {
-                this.loadFile(singleInPath, outPath, item1);
-              });
-            }, 100);
-          }
-        );
-      });
 
-      this.checkerrNameList();
+      loadXlsxBase(this.dirPath, this.exportPath);
     },
-    checkerrNameList() {
-      // 延迟判断 后期优化 qaq
-      setTimeout(() => {
-        this.$nextTick(() => {
-          // 以服务的方式调用的 Loading 需要异步关闭
-          this.loadingInstance.close();
-          this.$notify({
-            title: this.errNameList.length > 0 ? "请查看错误列表" : "转换成功",
-            message: "转换结束",
-            type: this.errNameList.length > 0 ? "warning" : "success",
-            duration: 700,
-          });
-        });
-      }, 2000);
-    },
-    loadDir(dirPath, filelist, dirlist) {
-      return new Promise((resolve, reject) => {
-        //获取文件夹下的文件列表
-        console.log(dirPath, "this.dirPath");
-        let reg = /^\./;
-        fs.readdir(dirPath, (err, files) => {
-          if (err) {
-            console.log(err);
-          } else {
-            files.filter((x) => {
-              let state = fs.lstatSync(dirPath + "/" + x);
-              if (state.isDirectory()) {
-                dirlist.push(x);
-              } else {
-                if (!reg.test(x)) {
-                  filelist.push(x);
-                }
-              }
-              return !state.isDirectory();
-            });
-          }
-        });
-        resolve("success");
-      }).catch(() => {});
-    },
+
     //导入路径
     handleImport() {
       console.log("引入");
@@ -212,7 +87,6 @@ export default {
           if (!result.canceled) {
             this.dirPath = result.filePaths[0];
             localStorage.setItem("dirPath", this.dirPath);
-            this.loadDir(this.dirPath, this.fileList, this.singleDirList);
           } else {
             this.$notify({
               title: "已取消",
@@ -234,7 +108,7 @@ export default {
     },
 
     //导出路径
-    handleExport(exportPath, isjson) {
+    handleExport(exportPath) {
       console.log("导出");
       dialog
         .showOpenDialog({
@@ -242,13 +116,8 @@ export default {
         })
         .then((result) => {
           if (!result.canceled) {
-            if (isjson) {
-              exportPath.exportJsonPath = result.filePaths[0];
-              localStorage.setItem("exportJsonPath", result.filePaths[0]);
-            } else {
-              exportPath.exportTsPath = result.filePaths[0];
-              localStorage.setItem("exportTsPath", result.filePaths[0]);
-            }
+            this.exportPath = result.filePaths[0];
+            localStorage.setItem("exportPath", result.filePaths[0]);
           } else {
             this.$notify({
               title: "已取消",
